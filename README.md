@@ -16,6 +16,10 @@ A modern real-time chat application built with React, TypeScript, Socket.IO, and
   - [Authentication](#authentication)
   - [Real-time Communication](#real-time-communication)
   - [Error Handling](#error-handling)
+- [Testing](#testing)
+  - [Test Structure](#test-structure)
+  - [Running Tests](#running-tests)
+  - [Writing Tests](#writing-tests)
 - [Development Guide](#development-guide)
   - [Adding New Components](#adding-new-components)
   - [State Management](#state-management)
@@ -39,6 +43,7 @@ The project follows a feature-based structure with clear separation of concerns:
 ```
 src/
 ├── components/         # UI components
+│   ├── __tests__/      # Component tests
 │   ├── message-input/  # Message input component
 │   ├── message-list/   # Message list component
 │   ├── ui/             # Reusable UI components
@@ -53,12 +58,14 @@ src/
 │   └── login.tsx       # Login page
 ├── router/             # Routing configuration
 ├── services/           # Service layer
+│   ├── __tests__/      # Service tests
 │   ├── api/            # API service
 │   ├── error-tracking/ # Error tracking service
 │   ├── socket/         # Socket.IO service
 │   └── storage/        # Local storage service
 ├── types/              # TypeScript type definitions
 └── utils/              # Utility functions
+    └── __tests__/      # Utility tests
 ```
 
 ## Getting Started
@@ -71,12 +78,18 @@ src/
 ### Installation
 
 1. Clone the repository
-2. Install dependencies:
+2. Install dependencies using npm ci to preserve the dependency tree:
 
 ```bash
-npm install
-# or
-yarn install
+npm ci
+```
+
+This ensures that the exact versions of dependencies specified in package-lock.json are installed, maintaining consistency across development environments.
+
+If you're using yarn:
+
+```bash
+yarn install --frozen-lockfile
 ```
 
 ### Running the Application
@@ -155,6 +168,97 @@ The application includes comprehensive error handling:
 2. Form validation with clear error messages
 3. Error states in contexts with automatic clearing
 4. Visual feedback for message status and errors
+
+## Testing
+
+The application uses Vitest and Testing Library for unit and integration testing.
+
+### Test Structure
+
+Tests are co-located with the code they test in `__tests__` directories at each logical level:
+
+```
+src/
+├── components/
+│   └── __tests__/          # Component tests
+│       ├── message-input/  # Tests for message input components
+│       ├── message-list/   # Tests for message list components
+│       ├── ui/             # Tests for UI components
+│       └── username-form/  # Tests for username form components
+├── services/
+│   └── __tests__/          # Service tests
+│       ├── api/            # Tests for API service
+│       ├── error-tracking/ # Tests for error tracking service
+│       ├── socket/         # Tests for socket service
+│       └── storage/        # Tests for storage service
+└── utils/
+    └── __tests__/          # Utility tests
+```
+
+This co-location approach makes it easy to find tests related to specific components or services, and encourages developers to write tests alongside their implementation code.
+
+### Running Tests
+
+To run all tests:
+
+```bash
+npm test
+# or
+yarn test
+```
+
+To run tests in watch mode:
+
+```bash
+npm test -- --watch
+# or
+yarn test --watch
+```
+
+To run tests with coverage:
+
+```bash
+npm test -- --coverage
+# or
+yarn test --coverage
+```
+
+### Writing Tests
+
+Each test file should follow these conventions:
+
+1. Import the necessary testing utilities
+2. Use descriptive test names that explain what is being tested
+3. Group related tests using `describe` blocks
+4. Use `beforeEach` and `afterEach` for setup and teardown
+5. Mock external dependencies when necessary
+
+Example test for a service:
+
+```typescript
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { myService } from '../service';
+
+describe('MyService', () => {
+  beforeEach(() => {
+    // Setup code
+    vi.clearAllMocks();
+  });
+
+  describe('myMethod', () => {
+    it('should return expected result', () => {
+      // Arrange
+      const input = 'test';
+      
+      // Act
+      const result = myService.myMethod(input);
+      
+      // Assert
+      expect(result).toBe('expected result');
+    });
+  });
+});
+```
 
 ## Development Guide
 
