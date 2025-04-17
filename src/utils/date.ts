@@ -22,6 +22,11 @@ export const getRelativeTime = (timestamp: number): string => {
   const now = Date.now();
   const diff = now - timestamp;
 
+  // If it's a future timestamp, return the formatted date
+  if (diff < 0) {
+    return formatDateTime(timestamp);
+  }
+
   if (diff < 60 * 1000) {
     return "just now";
   }

@@ -103,9 +103,9 @@ describe('Date Utils', () => {
       // 1 hour in the future
       const timestamp = Date.now() + 60 * 60 * 1000;
       
-      // According to the implementation, future dates are treated as "just now"
+      // Should return the formatted date for future dates
       const result = getRelativeTime(timestamp);
-      expect(result).toBe('just now');
+      expect(result).toBe(formatDateTime(timestamp));
     });
   });
 });
