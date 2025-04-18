@@ -30,6 +30,7 @@ A modern real-time chat application built with React, TypeScript, Socket.IO, and
 - Real-time messaging with Socket.IO
 - Username-based authentication
 - Message status tracking (sending, sent, error)
+- Infinite scroll for message history
 - Error tracking and logging
 - Responsive UI with TailwindCSS
 - TypeScript for type safety
@@ -152,6 +153,7 @@ Real-time messaging is implemented using Socket.IO:
 2. Messages are sent and received through socket events
 3. The `MessageContext` handles message state management
 4. Message status (sending, sent, error) is tracked and displayed
+5. Infinite scroll for loading previous messages
 
 Socket events:
 - `connect`: Socket connection established
@@ -159,6 +161,21 @@ Socket events:
 - `connect_error`: Socket connection error
 - `new-message`: New message received
 - `send-message`: Send a new message
+
+### Message Loading and Pagination
+
+The application implements infinite scroll for message history:
+
+1. Initial messages are loaded when the chat is opened
+2. When the user scrolls to the top of the message list, previous messages are loaded
+3. The scroll position is maintained when loading previous messages
+4. Loading indicators show when previous messages are being fetched
+5. The `MessageContext` tracks pagination state (offset, limit, hasMore)
+
+Custom hooks in the message list component handle:
+- Scroll position management
+- Infinite scroll detection
+- Automatic scrolling to bottom for new messages
 
 ### Error Handling
 
@@ -281,6 +298,20 @@ Each context includes:
 - A reducer file (`reducer.ts`)
 - Types (`types.ts`)
 - Hooks for easy access (`hooks.ts`)
+
+### Constants and Configuration
+
+The application uses centralized constants for configuration:
+
+1. `constants/chat.ts`: Contains chat-related constants
+   - `SCROLL_THRESHOLD`: Threshold for triggering infinite scroll (in pixels)
+   - `DEFAULT_LIMIT`: Default number of messages to load per page
+   - `ERROR_AUTO_DISMISS`: Time for auto-dismissing error messages (in milliseconds)
+
+This approach improves maintainability by:
+- Centralizing magic numbers in one location
+- Making configuration values self-documenting
+- Allowing easy adjustment of application behavior
 
 ### Environment Configuration
 
