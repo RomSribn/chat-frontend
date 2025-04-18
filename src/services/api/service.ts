@@ -137,8 +137,8 @@ class ApiService implements ApiServiceInterface {
   /**
    * Fetch the list of messages
    */
-  public async fetchMessages(): Promise<ChatMessage[]> {
-    return this.get<ChatMessage[]>(API_ENDPOINTS.MESSAGES);
+  public async fetchMessages(): Promise<{messages: ChatMessage[]; total: number}> {
+    return this.get<{messages: ChatMessage[]; total: number}>(API_ENDPOINTS.MESSAGES);
   }
 }
 

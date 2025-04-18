@@ -1,0 +1,237 @@
+#!/bin/sh
+
+# Colors for logs
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[0;33m'
+BLUE='\033[0;34m'
+MAGENTA='\033[0;35m'
+CYAN='\033[0;36m'
+NC='\033[0m' # No Color
+
+# Function for logging with timestamp
+log() {
+  local level=$1
+  local message=$2
+  local timestamp=$(date "+%Y-%m-%d %H:%M:%S")
+  
+  case $level in
+    "INFO")
+      echo -e "${GREEN}[INFO]${NC} ${BLUE}[$timestamp]${NC} $message"
+      ;;
+    "WARN")
+      echo -e "${YELLOW}[WARN]${NC} ${BLUE}[$timestamp]${NC} $message"
+      ;;
+    "ERROR")
+      echo -e "${RED}[ERROR]${NC} ${BLUE}[$timestamp]${NC} $message"
+      ;;
+    "SUCCESS")
+      echo -e "${GREEN}[SUCCESS]${NC} ${BLUE}[$timestamp]${NC} $message"
+      ;;
+    *)
+      echo -e "${BLUE}[$timestamp]${NC} $message"
+      ;;
+  esac
+}
+
+# Function for error handling
+handle_error() {
+  local error_message=$1
+  local exit_code=${2:-0}
+  log "ERROR" "$error_message"
+  
+  # Additional actions on error can be added here
+  # For example, sending notifications or writing to a log file
+  
+  # If the error is critical, terminate the script
+  if [ "$exit_code" -ne 0 ]; then
+    log "ERROR" "🛑 Terminating container initialization due to critical error"
+    exit "$exit_code"
+  fi
+}
+
+log "INFO" "🚀 Starting container initialization script"
+
+# Check for required environment variables
+log "INFO" "🔍 Checking required environment variables..."
+
+# Use .env.example as the source of required variables
+ENV_EXAMPLE_FILE="/app/.env.example"
+
+if [ ! -f "$ENV_EXAMPLE_FILE" ]; then
+  log "ERROR" "❌ .env.example file not found at $ENV_EXAMPLE_FILE"
+  log "ERROR" "This file is required for validating environment variables"
+  log "ERROR" "Please make sure the file is correctly copied to the container"
+  log "ERROR" "Check your Dockerfile to ensure it includes:"
+  log "ERROR" "COPY .env.example /app/.env.example"
+  
+  # Exit with error code
+  exit 1
+else
+  log "INFO" "📋 Using .env.example as source of required variables"
+  
+  # Extract all variable names from .env.example (non-empty, non-commented lines with = sign)
+  REQUIRED_VARS=$(grep "=" "$ENV_EXAMPLE_FILE" | grep -v "^#" | grep -v "^[[:space:]]*$" | cut -d= -f1)
+  
+  if [ -z "$REQUIRED_VARS" ]; then
+    log "WARN" "⚠️ No environment variables found in .env.example"
+    log "INFO" "Continuing without validation of required variables"
+    SKIP_VALIDATION=true
+  else
+    log "SUCCESS" "✅ Found $(echo "$REQUIRED_VARS" | wc -l) required variables in .env.example"
+    
+    # Filter out NODE_ENV as it's typically not passed to the container
+    REQUIRED_VARS=$(echo "$REQUIRED_VARS" | grep -v "^NODE_ENV$")
+    
+    # Log which variables will be checked
+    log "INFO" "The following variables will be validated:"
+    for var in $REQUIRED_VARS; do
+      log "INFO" "   - $var"
+    done
+  fi
+fi
+
+if [ "$SKIP_VALIDATION" != "true" ]; then
+  # Check each required variable
+  MISSING_VARS=""
+  for var in $REQUIRED_VARS; do
+    if [ -z "$(printenv "$var")" ]; then
+      if [ -z "$MISSING_VARS" ]; then
+        MISSING_VARS="$var"
+      else
+        MISSING_VARS="$MISSING_VARS $var"
+      fi
+    fi
+  done
+
+  # If any variables are missing, exit with error
+  if [ -n "$MISSING_VARS" ]; then
+    log "ERROR" "❌ Missing required environment variables:"
+    for var in $MISSING_VARS; do
+      log "ERROR" "   - $var"
+    done
+    log "ERROR" "Please provide all required environment variables when starting the container."
+    log "ERROR" "Example:"
+    log "ERROR" "docker run -it -p 8080:80 \\"
+    for var in $REQUIRED_VARS; do
+      log "ERROR" "  -e $var=<value> \\"
+    done
+    log "ERROR" "  money-glitch-frontend"
+    
+    # Exit with error code
+    exit 1
+  fi
+
+  log "SUCCESS" "✅ All required environment variables are set"
+fi
+
+# Find all JavaScript files
+log "INFO" "🔍 Searching for JavaScript files..."
+JS_FILES=$(find /usr/share/nginx/html -name "*.js" 2>/dev/null)
+
+if [ -z "$JS_FILES" ]; then
+  handle_error "No JavaScript files found!"
+  log "WARN" "Continuing execution, but variable replacement will not be performed"
+else
+  JS_FILES_COUNT=$(echo "$JS_FILES" | wc -l)
+  log "SUCCESS" "✅ Found $JS_FILES_COUNT JavaScript files"
+fi
+
+# Process environment variables
+log "INFO" "🔄 Starting environment variable processing..."
+ENV_VARS=$(env | grep "^APP_" || echo "")
+
+if [ -z "$ENV_VARS" ]; then
+  handle_error "No environment variables with APP_ prefix found!"
+  log "WARN" "Continuing execution, but variable replacement will not be performed"
+else
+  ENV_VARS_COUNT=$(echo "$ENV_VARS" | wc -l)
+  log "SUCCESS" "✅ Found $ENV_VARS_COUNT environment variables for replacement"
+fi
+
+# Counters for statistics
+TOTAL_REPLACEMENTS=0
+PROCESSED_FILES=0
+FAILED_FILES=0
+
+# Save environment variables to a temporary file to avoid pipe issues with variable scope
+ENV_VARS_FILE=$(mktemp)
+echo "$ENV_VARS" > "$ENV_VARS_FILE"
+
+# Display environment variables that will be used for replacement
+log "INFO" "📋 Environment variables to be used for replacement:"
+while IFS= read -r line; do
+  value=${line#*=}
+  name=${line%%=*}
+  # Mask sensitive data if needed (e.g., passwords, tokens)
+  if [[ "$name" == *"PASSWORD"* ]] || [[ "$name" == *"SECRET"* ]] || [[ "$name" == *"TOKEN"* ]]; then
+    masked_value="${value:0:3}*****${value: -3}"
+    log "INFO" "   ${CYAN}$name${NC} = ${YELLOW}$masked_value${NC}"
+  else
+    log "INFO" "   ${CYAN}$name${NC} = ${YELLOW}$value${NC}"
+  fi
+done < "$ENV_VARS_FILE"
+
+# Process each environment variable
+while IFS= read -r line; do
+  value=${line#*=}
+  name=${line%%=*}
+  placeholder="REPLACEME_$name"
+  
+  log "INFO" "🔄 Replacing ${CYAN}$placeholder${NC} with the value of ${CYAN}$name${NC}"
+  
+  # Replace placeholders in all JS files
+  for js_file in $JS_FILES; do
+    # Check if the file contains the placeholder
+    if grep -q "$placeholder" "$js_file"; then
+      PROCESSED_FILES=$((PROCESSED_FILES + 1))
+      log "INFO" "📄 Processing file: ${MAGENTA}$(basename "$js_file")${NC}"
+      
+      # Count the number of replacements
+      REPLACEMENTS=$(grep -o "$placeholder" "$js_file" | wc -l)
+      
+      # Perform the replacement
+      if sed -i "s#$placeholder#$value#g" "$js_file" 2>/dev/null; then
+        TOTAL_REPLACEMENTS=$((TOTAL_REPLACEMENTS + REPLACEMENTS))
+        
+        # Display what was replaced with what
+        if [[ "$name" == *"PASSWORD"* ]] || [[ "$name" == *"SECRET"* ]] || [[ "$name" == *"TOKEN"* ]]; then
+          masked_value="${value:0:3}*****${value: -3}"
+          log "SUCCESS" "✅ Replaced ${CYAN}$placeholder${NC} → ${YELLOW}$masked_value${NC} ($REPLACEMENTS occurrences)"
+        else
+          log "SUCCESS" "✅ Replaced ${CYAN}$placeholder${NC} → ${YELLOW}$value${NC} ($REPLACEMENTS occurrences)"
+        fi
+      else
+        FAILED_FILES=$((FAILED_FILES + 1))
+        handle_error "Error replacing in file $(basename "$js_file")"
+      fi
+    fi
+  done
+done < "$ENV_VARS_FILE"
+
+# Clean up temporary file
+rm -f "$ENV_VARS_FILE"
+
+# Output statistics
+log "SUCCESS" "📊 Replacement statistics:"
+log "INFO" "   - Files processed: $PROCESSED_FILES"
+log "INFO" "   - Files with errors: $FAILED_FILES"
+log "INFO" "   - Total replacements made: $TOTAL_REPLACEMENTS"
+
+# Check for remaining placeholders (optional)
+log "INFO" "🔍 Checking for remaining placeholders..."
+REMAINING=$(grep -r "REPLACEME_APP_" /usr/share/nginx/html --include="*.js" 2>/dev/null || echo "")
+
+if [ -n "$REMAINING" ]; then
+  log "WARN" "⚠️ Unreplaced placeholders detected:"
+  echo "$REMAINING" | head -n 5
+  if [ $(echo "$REMAINING" | wc -l) -gt 5 ]; then
+    log "WARN" "... and $(echo "$REMAINING" | wc -l) more occurrences"
+  fi
+else
+  log "SUCCESS" "✅ All placeholders successfully replaced"
+fi
+
+# Start nginx
+log "INFO" "🚀 Starting Nginx..."
+exec nginx -g 'daemon off;'

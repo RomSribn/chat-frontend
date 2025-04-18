@@ -34,7 +34,7 @@ export function MessageProvider({ children }: { children: React.ReactNode }) {
     dispatch(messageActions.loadStart());
 
     try {
-      const messages = await fetchMessages();
+      const { messages } = await fetchMessages();
       dispatch(messageActions.loadSuccess(messages));
     } catch (err) {
       const messageError = err as MessageError;
