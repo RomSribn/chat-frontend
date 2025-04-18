@@ -139,10 +139,10 @@ fi
 
 # Process environment variables
 log "INFO" "🔄 Starting environment variable processing..."
-ENV_VARS=$(env | grep "^APP_" || echo "")
+ENV_VARS=$(env | grep "^VITE_" || echo "")
 
 if [ -z "$ENV_VARS" ]; then
-  handle_error "No environment variables with APP_ prefix found!"
+  handle_error "No environment variables with VITE_ prefix found!"
   log "WARN" "Continuing execution, but variable replacement will not be performed"
 else
   ENV_VARS_COUNT=$(echo "$ENV_VARS" | wc -l)
@@ -220,7 +220,7 @@ log "INFO" "   - Total replacements made: $TOTAL_REPLACEMENTS"
 
 # Check for remaining placeholders (optional)
 log "INFO" "🔍 Checking for remaining placeholders..."
-REMAINING=$(grep -r "REPLACEME_APP_" /usr/share/nginx/html --include="*.js" 2>/dev/null || echo "")
+REMAINING=$(grep -r "REPLACEME_VITE_" /usr/share/nginx/html --include="*.js" 2>/dev/null || echo "")
 
 if [ -n "$REMAINING" ]; then
   log "WARN" "⚠️ Unreplaced placeholders detected:"
