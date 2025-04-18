@@ -137,10 +137,13 @@ class ApiService implements ApiServiceInterface {
   /**
    * Fetch the list of messages with pagination
    */
-  public async fetchMessages(offset = 0, limit = 6): Promise<{messages: ChatMessage[]; total: number}> {
-    return this.get<{messages: ChatMessage[]; total: number}>(
+  public async fetchMessages(
+    offset = 0,
+    limit = 6,
+  ): Promise<{ messages: ChatMessage[]; total: number }> {
+    return this.get<{ messages: ChatMessage[]; total: number }>(
       API_ENDPOINTS.MESSAGES,
-      { params: { offset, limit } }
+      { params: { offset, limit } },
     );
   }
 }

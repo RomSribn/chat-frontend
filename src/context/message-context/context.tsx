@@ -56,13 +56,21 @@ export function MessageProvider({ children }: { children: React.ReactNode }) {
     dispatch(messageActions.loadPreviousStart());
 
     try {
-      const { messages, total } = await fetchMessages(messageState.offset, messageState.limit);
+      const { messages, total } = await fetchMessages(
+        messageState.offset,
+        messageState.limit,
+      );
       dispatch(messageActions.loadPreviousSuccess(messages, total));
     } catch (err) {
       const messageError = err as MessageError;
       dispatch(messageActions.loadPreviousError(messageError));
     }
-  }, [messageState.hasMore, messageState.isLoadingPrevious, messageState.offset, messageState.limit]);
+  }, [
+    messageState.hasMore,
+    messageState.isLoadingPrevious,
+    messageState.offset,
+    messageState.limit,
+  ]);
 
   const handleSendMessage = useCallback((username: string, content: string) => {
     const tempId = `temp-${Date.now()}`;

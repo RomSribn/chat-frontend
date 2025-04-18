@@ -20,7 +20,10 @@ export const messageActions = {
     type: MessageReducerAction.LOAD_PREVIOUS_START,
   }),
 
-  loadPreviousSuccess: (messages: ChatMessage[], total: number): MessageAction => ({
+  loadPreviousSuccess: (
+    messages: ChatMessage[],
+    total: number,
+  ): MessageAction => ({
     type: MessageReducerAction.LOAD_PREVIOUS_SUCCESS,
     payload: { messages, total },
   }),

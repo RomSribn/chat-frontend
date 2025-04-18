@@ -2,19 +2,19 @@ import { useContext } from "react";
 import MessageContext from "./context";
 
 export const useMessages = () => {
-  const { 
-    messages, 
-    isLoading, 
+  const {
+    messages,
+    isLoading,
     isLoadingPrevious,
-    error, 
+    error,
     hasMore,
     offset,
     limit,
     total,
-    loadMessages, 
+    loadMessages,
     loadPreviousMessages,
-    sendMessage, 
-    clearError 
+    sendMessage,
+    clearError,
   } = useContext(MessageContext);
 
   return {

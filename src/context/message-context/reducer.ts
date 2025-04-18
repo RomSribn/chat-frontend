@@ -34,23 +34,26 @@ export function messageReducer(
         error: null,
         total: action.payload.total,
         offset: state.limit,
-        hasMore: action.payload.total > state.limit
+        hasMore: action.payload.total > state.limit,
       };
 
     case MessageReducerAction.LOAD_ERROR:
       return { ...state, isLoading: false, error: action.payload };
-      
+
     case MessageReducerAction.LOAD_PREVIOUS_START:
       return { ...state, isLoadingPrevious: true, error: null };
 
     case MessageReducerAction.LOAD_PREVIOUS_SUCCESS:
       return {
         ...state,
-        messages: [...action.payload.messages.map((msg) => ({ ...msg })), ...state.messages],
+        messages: [
+          ...action.payload.messages.map((msg) => ({ ...msg })),
+          ...state.messages,
+        ],
         isLoadingPrevious: false,
         error: null,
         offset: state.offset + state.limit,
-        hasMore: state.offset + state.limit < action.payload.total
+        hasMore: state.offset + state.limit < action.payload.total,
       };
 
     case MessageReducerAction.LOAD_PREVIOUS_ERROR:

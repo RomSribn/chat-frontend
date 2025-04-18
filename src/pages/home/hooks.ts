@@ -4,16 +4,16 @@ import { useAuth } from "#context/auth-context";
 import errorTrackingService, { LogLevel } from "#services/error-tracking";
 
 export const useHomePage = () => {
-  const { 
-    messages, 
-    isLoading, 
+  const {
+    messages,
+    isLoading,
     isLoadingPrevious,
     hasMore,
-    error, 
-    loadMessages, 
+    error,
+    loadMessages,
     loadPreviousMessages,
-    sendMessage, 
-    clearError 
+    sendMessage,
+    clearError,
   } = useMessages();
   const { username } = useAuth();
 
@@ -31,14 +31,18 @@ export const useHomePage = () => {
 
   const handleLoadPreviousMessages = useCallback(() => {
     if (isLoadingPrevious || !hasMore) return;
-    
+
     errorTrackingService.log(LogLevel.INFO, "Loading previous messages");
-    
+
     loadPreviousMessages().catch((err) => {
-      errorTrackingService.log(LogLevel.ERROR, "Error loading previous messages", {
-        error: err instanceof Error ? err.message : String(err),
-        username,
-      });
+      errorTrackingService.log(
+        LogLevel.ERROR,
+        "Error loading previous messages",
+        {
+          error: err instanceof Error ? err.message : String(err),
+          username,
+        },
+      );
       console.error(err);
     });
   }, [loadPreviousMessages, isLoadingPrevious, hasMore, username]);

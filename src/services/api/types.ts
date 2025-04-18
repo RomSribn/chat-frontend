@@ -8,7 +8,10 @@ export interface ApiServiceInterface {
     data?: D,
     config?: AxiosRequestConfig,
   ): Promise<T>;
-  fetchMessages(offset?: number, limit?: number): Promise<{messages: ChatMessage[]; total: number}>;
+  fetchMessages(
+    offset?: number,
+    limit?: number,
+  ): Promise<{ messages: ChatMessage[]; total: number }>;
 }
 
 export interface ApiErrorResponse {

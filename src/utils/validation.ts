@@ -28,7 +28,8 @@ export const validateUsername = (
   if (!usernameRegex.test(username)) {
     return {
       isValid: false,
-      error: "Username can only contain letters, numbers, hyphens, and underscores",
+      error:
+        "Username can only contain letters, numbers, hyphens, and underscores",
     };
   }
 

@@ -7,14 +7,14 @@ import { useHomePage } from "./hooks";
 
 const HomePage = memo(() => {
   const { username } = useAuth();
-  const { 
-    messages, 
-    isLoading, 
+  const {
+    messages,
+    isLoading,
     isLoadingPrevious,
     hasMore,
-    error, 
+    error,
     sendMessage,
-    loadPreviousMessages
+    loadPreviousMessages,
   } = useHomePage();
 
   const handleSendMessage = useCallback(

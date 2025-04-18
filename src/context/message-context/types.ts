@@ -35,10 +35,16 @@ export interface MessageContextType extends MessageState {
 
 export type MessageAction =
   | { type: MessageReducerAction.LOAD_START }
-  | { type: MessageReducerAction.LOAD_SUCCESS; payload: { messages: ChatMessage[], total: number } }
+  | {
+      type: MessageReducerAction.LOAD_SUCCESS;
+      payload: { messages: ChatMessage[]; total: number };
+    }
   | { type: MessageReducerAction.LOAD_ERROR; payload: MessageError }
   | { type: MessageReducerAction.LOAD_PREVIOUS_START }
-  | { type: MessageReducerAction.LOAD_PREVIOUS_SUCCESS; payload: { messages: ChatMessage[], total: number } }
+  | {
+      type: MessageReducerAction.LOAD_PREVIOUS_SUCCESS;
+      payload: { messages: ChatMessage[]; total: number };
+    }
   | { type: MessageReducerAction.LOAD_PREVIOUS_ERROR; payload: MessageError }
   | { type: MessageReducerAction.ADD_MESSAGE; payload: ChatMessage }
   | { type: MessageReducerAction.SEND_MESSAGE; payload: ChatMessage }
