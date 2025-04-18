@@ -22,6 +22,7 @@
     "baseUrl": "./src",
     "paths": {
         "#components/*": ["components/*"],
+        "#constants/*": ["constants/*"],
         "#context/*": ["context/*"],
         "#environments/*": ["environments/*"],
         "#hooks/*": ["hooks/*"],
