@@ -1,7 +1,7 @@
 import { apiService } from "./service";
 
-export const fetchMessages = async () => {
-  return apiService.fetchMessages();
+export const fetchMessages = async (offset?: number, limit?: number) => {
+  return apiService.fetchMessages(offset, limit);
 };
 
 export default apiService;

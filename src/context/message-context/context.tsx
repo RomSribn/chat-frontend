@@ -16,8 +16,14 @@ import errorTrackingService, { LogLevel } from "#services/error-tracking";
 const initialContextValue: MessageContextType = {
   messages: [],
   isLoading: false,
+  isLoadingPrevious: false,
   error: null,
+  hasMore: true,
+  offset: 0,
+  limit: 6,
+  total: 0,
   loadMessages: async () => {},
+  loadPreviousMessages: async () => {},
   sendMessage: () => {},
   clearError: () => {},
 };
@@ -34,13 +40,29 @@ export function MessageProvider({ children }: { children: React.ReactNode }) {
     dispatch(messageActions.loadStart());
 
     try {
-      const { messages } = await fetchMessages();
-      dispatch(messageActions.loadSuccess(messages));
+      const { messages, total } = await fetchMessages();
+      dispatch(messageActions.loadSuccess(messages, total));
     } catch (err) {
       const messageError = err as MessageError;
       dispatch(messageActions.loadError(messageError));
     }
   }, []);
+
+  const loadPreviousMessages = useCallback(async () => {
+    if (!messageState.hasMore || messageState.isLoadingPrevious) {
+      return;
+    }
+
+    dispatch(messageActions.loadPreviousStart());
+
+    try {
+      const { messages, total } = await fetchMessages(messageState.offset, messageState.limit);
+      dispatch(messageActions.loadPreviousSuccess(messages, total));
+    } catch (err) {
+      const messageError = err as MessageError;
+      dispatch(messageActions.loadPreviousError(messageError));
+    }
+  }, [messageState.hasMore, messageState.isLoadingPrevious, messageState.offset, messageState.limit]);
 
   const handleSendMessage = useCallback((username: string, content: string) => {
     const tempId = `temp-${Date.now()}`;
@@ -94,16 +116,28 @@ export function MessageProvider({ children }: { children: React.ReactNode }) {
     () => ({
       messages: messageState.messages,
       isLoading: messageState.isLoading,
+      isLoadingPrevious: messageState.isLoadingPrevious,
       error: messageState.error,
+      hasMore: messageState.hasMore,
+      offset: messageState.offset,
+      limit: messageState.limit,
+      total: messageState.total,
       loadMessages,
+      loadPreviousMessages,
       sendMessage: handleSendMessage,
       clearError,
     }),
     [
       messageState.messages,
       messageState.isLoading,
+      messageState.isLoadingPrevious,
       messageState.error,
+      messageState.hasMore,
+      messageState.offset,
+      messageState.limit,
+      messageState.total,
       loadMessages,
+      loadPreviousMessages,
       handleSendMessage,
       clearError,
     ],

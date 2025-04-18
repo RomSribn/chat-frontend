@@ -6,13 +6,27 @@ export const messageActions = {
     type: MessageReducerAction.LOAD_START,
   }),
 
-  loadSuccess: (messages: ChatMessage[]): MessageAction => ({
+  loadSuccess: (messages: ChatMessage[], total: number): MessageAction => ({
     type: MessageReducerAction.LOAD_SUCCESS,
-    payload: messages,
+    payload: { messages, total },
   }),
 
   loadError: (error: MessageError): MessageAction => ({
     type: MessageReducerAction.LOAD_ERROR,
+    payload: error,
+  }),
+
+  loadPreviousStart: (): MessageAction => ({
+    type: MessageReducerAction.LOAD_PREVIOUS_START,
+  }),
+
+  loadPreviousSuccess: (messages: ChatMessage[], total: number): MessageAction => ({
+    type: MessageReducerAction.LOAD_PREVIOUS_SUCCESS,
+    payload: { messages, total },
+  }),
+
+  loadPreviousError: (error: MessageError): MessageAction => ({
+    type: MessageReducerAction.LOAD_PREVIOUS_ERROR,
     payload: error,
   }),
 

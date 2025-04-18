@@ -7,7 +7,15 @@ import { useHomePage } from "./hooks";
 
 const HomePage = memo(() => {
   const { username } = useAuth();
-  const { messages, isLoading, error, sendMessage } = useHomePage();
+  const { 
+    messages, 
+    isLoading, 
+    isLoadingPrevious,
+    hasMore,
+    error, 
+    sendMessage,
+    loadPreviousMessages
+  } = useHomePage();
 
   const handleSendMessage = useCallback(
     (content: string) => {
@@ -44,6 +52,9 @@ const HomePage = memo(() => {
             },
             {} as Record<string, MessageStatus>,
           )}
+        isLoadingPrevious={isLoadingPrevious}
+        hasMore={hasMore}
+        onLoadPrevious={loadPreviousMessages}
       />
 
       <MessageInput onSend={handleSendMessage} />

@@ -1,11 +1,20 @@
-import { useEffect } from "react";
+import { useEffect, useCallback } from "react";
 import { useMessages } from "#context/message-context";
 import { useAuth } from "#context/auth-context";
 import errorTrackingService, { LogLevel } from "#services/error-tracking";
 
 export const useHomePage = () => {
-  const { messages, isLoading, error, loadMessages, sendMessage, clearError } =
-    useMessages();
+  const { 
+    messages, 
+    isLoading, 
+    isLoadingPrevious,
+    hasMore,
+    error, 
+    loadMessages, 
+    loadPreviousMessages,
+    sendMessage, 
+    clearError 
+  } = useMessages();
   const { username } = useAuth();
 
   useEffect(() => {
@@ -19,6 +28,20 @@ export const useHomePage = () => {
       console.error(err);
     });
   }, [loadMessages, username]);
+
+  const handleLoadPreviousMessages = useCallback(() => {
+    if (isLoadingPrevious || !hasMore) return;
+    
+    errorTrackingService.log(LogLevel.INFO, "Loading previous messages");
+    
+    loadPreviousMessages().catch((err) => {
+      errorTrackingService.log(LogLevel.ERROR, "Error loading previous messages", {
+        error: err instanceof Error ? err.message : String(err),
+        username,
+      });
+      console.error(err);
+    });
+  }, [loadPreviousMessages, isLoadingPrevious, hasMore, username]);
 
   useEffect(() => {
     if (error) {
@@ -43,7 +66,10 @@ export const useHomePage = () => {
   return {
     messages,
     isLoading,
+    isLoadingPrevious,
+    hasMore,
     error,
     sendMessage,
+    loadPreviousMessages: handleLoadPreviousMessages,
   };
 };
